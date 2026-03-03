@@ -11,21 +11,21 @@ export default function AdminSubNav() {
   const inactive =
     "text-gray-700 hover:bg-gray-200 dark:text-gray-200 dark:hover:bg-gray-800";
 
-  const link = (to: string) => (props: { isActive: boolean }) =>
+  const link = () => (props: { isActive: boolean }) =>
     `${base} ${props.isActive ? active : inactive}`;
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2">
       {isAnvil && (
-        <NavLink to="/admin/requests" className={link("/admin/requests")}>
+        <NavLink to="/admin/requests" className={link()}>
           Requests
         </NavLink>
       )}
-      <NavLink to="/admin/explorer" className={link("/admin/explorer")}>
+      <NavLink to="/admin/explorer" className={link()}>
         Explorer
       </NavLink>
       {isAnvil && (
-        <NavLink to="/admin/manual" className={link("/admin/manual")}>
+        <NavLink to="/admin/manual" className={link()}>
           Manual
         </NavLink>
       )}

@@ -1,7 +1,6 @@
 export const ANVIL = {
   id: 31337,
   name: "Anvil",
-  explorerTx: (hash: string) => null as string | null, // no explorer
 };
 
 export const SEPOLIA = {

@@ -76,8 +76,7 @@ export function useOnchainIndexHistory(area: string, indexName = "NORDPOOL_DAYAH
           args: [idx, aId, dateNum],
         });
 
-        const [datasetHash, value1e6, reporter, reportedAt] = res;
-
+        const [datasetHash, value1e6, , reportedAt] = res;
         if (reportedAt !== 0n && datasetHash !== "0x0000000000000000000000000000000000000000000000000000000000000000") {
           points.push({
             dateNum,
