@@ -10,6 +10,8 @@ import { AREAS, type Area } from "../constants";
 import { getAddresses } from "../contracts/addresses";
 import { forwarderAbi } from "../contracts/forwarder";
 import { encodeDailyIndexReport, normalizeBytes32, toAreaId } from "../utils/report";
+import { requireAddress } from "../utils/requireAddress";
+
 
 type Row = {
   yyyymmdd: number;
@@ -35,7 +37,10 @@ export default function AdminManualCommit() {
       : (import.meta.env.VITE_ANVIL_OWNER_ADDRESS as string | undefined);
   const isOwner = sameAddress(address, owner);
 
-  const { consumer: consumerAddress, forwarder: forwarderAddress } = getAddresses(chainId);
+  const { consumer: consumer, forwarder: forwarder } = getAddresses(chainId);
+
+  const consumerAddress = requireAddress(consumer, "consumer");
+  const forwarderAddress = requireAddress(forwarder, "forwarder");
 
   const rpcUrl =
     chainId === 11155111

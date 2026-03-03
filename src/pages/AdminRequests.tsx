@@ -11,6 +11,7 @@ import { getAddresses } from "../contracts/addresses";
 import { requestRegistryAbi } from "../contracts/requestRegistry";
 import { forwarderAbi } from "../contracts/forwarder";
 import { encodeDailyIndexReport, toAreaId } from "../utils/report";
+import { requireAddress } from "../utils/requireAddress";
 
 type Status = "None" | "Pending" | "Fulfilled" | "Cancelled" | "Expired";
 
@@ -60,6 +61,22 @@ export default function AdminRequests() {
   const isOwner = sameAddress(address, owner);
   
   const { consumer, forwarder, registry } = getAddresses(chainId);
+  const registryAddr = requireAddress(registry, "registry");
+  const consumerAddr = requireAddress(consumer, "consumer");
+  const forwarderAddr = requireAddress(forwarder, "forwarder");
+
+  
+  if (!registryAddr) {
+    return (
+      <PageWrapper title="Admin" subtitle="Requests">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Registry is not configured for this network.
+          </p>
+        </div>
+      </PageWrapper>
+    );
+  }
 
   const rpcUrl =
     chainId === 11155111
@@ -85,7 +102,7 @@ export default function AdminRequests() {
     setReadErr(null);
     try {
       const next = (await client.readContract({
-        address: registry,
+        address: registryAddr,
         abi: requestRegistryAbi,
         functionName: "nextRequestId",
       })) as bigint;
@@ -99,7 +116,7 @@ export default function AdminRequests() {
       const results = await Promise.all(
         ids.map(async (id) => {
           const r = await client.readContract({
-            address: registry,
+            address: registryAddr,
             abi: requestRegistryAbi,
             functionName: "requests",
             args: [id],
@@ -200,10 +217,10 @@ export default function AdminRequests() {
         setPendingAfterTx(null);
 
         writeContract({
-          address: forwarder,
+          address: forwarderAddr,
           abi: forwarderAbi,
           functionName: "forward",
-          args: [consumer, "0x", report],
+          args: [consumerAddr, "0x", report],
         });
       } else {
         setPendingAfterTx(null);
@@ -225,7 +242,7 @@ export default function AdminRequests() {
       setPendingAfterTx({ kind: "create" });
 
       writeContract({
-        address: registry,
+        address: registryAddr,
         abi: requestRegistryAbi,
         functionName: "createRequest",
         args: [indexId, areaId, yyyymmdd, currency],
@@ -268,7 +285,7 @@ export default function AdminRequests() {
       });
 
       writeContract({
-        address: registry,
+        address: registryAddr,
         abi: requestRegistryAbi,
         functionName: "markFulfilled",
         args: [r.id, value1e6, datasetHash],
@@ -286,7 +303,7 @@ export default function AdminRequests() {
       setPendingAfterTx({ kind: "cancel" });
 
       writeContract({
-        address: registry,
+        address: registryAddr,
         abi: requestRegistryAbi,
         functionName: "cancelRequest",
         args: [r.id],
@@ -452,7 +469,7 @@ export default function AdminRequests() {
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Requests</h2>
           <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-            chainId: {chainId} • registry: {registry.slice(0, 10)}…{registry.slice(-8)}
+            chainId: {chainId} • registry: {registryAddr.slice(0, 10)}…{registryAddr.slice(-8)}
           </span>
         </div>
 

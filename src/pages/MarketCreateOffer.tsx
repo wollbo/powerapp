@@ -10,6 +10,8 @@ import { AREAS, type Area } from "../constants";
 import { toAreaId } from "../utils/report";
 import { getAddresses } from "../contracts/addresses";
 import { northpoleOptionFactoryAbi } from "../contracts/northpoleOptionFactory";
+import { requireAddress } from "../utils/requireAddress";
+
 
 function isoToYyyymmdd(iso: string): number {
   // "2026-02-21" -> 20260221
@@ -222,6 +224,8 @@ export default function MarketCreateOffer() {
     if (!factory) return;
 
     try {
+      const factoryAddr = requireAddress(factory, "factory");
+      const consumerAddr = requireAddress(consumer, "consumer");
       if (!dateISO || dateISO.length !== 10) throw new Error("Pick a valid date");
 
       const yyyymmdd = isoToYyyymmdd(dateISO);
@@ -243,11 +247,11 @@ export default function MarketCreateOffer() {
       }
 
       writeContract({
-        address: factory,
+        address: factoryAddr,
         abi: northpoleOptionFactoryAbi,
         functionName: "createOption",
         args: [
-          consumer,
+          consumerAddr,
           indexId,
           toAreaId(area) as `0x${string}`,
           yyyymmdd,
