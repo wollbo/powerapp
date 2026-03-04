@@ -57,6 +57,40 @@ function tsToUtc(ts: bigint) {
   return new Date(ms).toISOString().replace(".000Z", "Z");
 }
 
+async function getLogsChunked(args: {
+  client: ReturnType<typeof createPublicClient>;
+  address: `0x${string}`;
+  event: any; // parseAbiItem(...)
+  args?: Record<string, any>;
+  fromBlock: bigint;
+  toBlock: bigint;
+  maxRange?: bigint; // default 49_000
+}) {
+  const { client, address, event } = args;
+  const maxRange = args.maxRange ?? 49_000n;
+
+  const out: any[] = [];
+  let start = args.fromBlock;
+
+  while (start <= args.toBlock) {
+    const end = start + maxRange;
+    const chunkTo = end > args.toBlock ? args.toBlock : end;
+
+    const chunk = await client.getLogs({
+      address,
+      event,
+      args: args.args,
+      fromBlock: start,
+      toBlock: chunkTo,
+    });
+
+    out.push(...chunk);
+    start = chunkTo + 1n;
+  }
+
+  return out;
+}
+
 export default function MarketBrowse() {
   const { address, isConnected } = useAccount();
   const me = (address ?? "").toLowerCase();
@@ -84,13 +118,25 @@ export default function MarketBrowse() {
     setReadErr(null);
 
     try {
-      const logs = await client.getLogs({
+      if (!factory) {
+        setReadErr("Missing factory address for this chain.");
+        setLoading(false);
+        return;
+      }
+
+      const evt = parseAbiItem(
+        "event OptionCreated(address indexed option,address indexed consumer,address indexed seller,bytes32 indexId,bytes32 areaId,uint32 yyyymmdd,int256 strike1e6,uint8 direction,uint256 premiumWei,uint256 payoutWei,uint64 buyDeadline)"
+      );
+
+      const latestBlock = await client.getBlockNumber();
+
+      const logs = await getLogsChunked({
+        client,
         address: factory,
-        event: parseAbiItem(
-          "event OptionCreated(address indexed option,address indexed consumer,address indexed seller,bytes32 indexId,bytes32 areaId,uint32 yyyymmdd,int256 strike1e6,uint8 direction,uint256 premiumWei,uint256 payoutWei,uint64 buyDeadline)"
-        ),
+        event: evt,
         fromBlock: FROM_BLOCK,
-        toBlock: "latest",
+        toBlock: latestBlock,
+        maxRange: 49_000n,
       });
 
       const base: OptionRow[] = logs.map((l) => {

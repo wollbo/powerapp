@@ -53,10 +53,54 @@ function shortAddr(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
+async function getLogsChunked(args: {
+  client: ReturnType<typeof createPublicClient>;
+  address: `0x${string}`;
+  event: any; // parseAbiItem(...)
+  args?: Record<string, any>;
+  fromBlock: bigint;
+  toBlock: bigint;
+  maxRange?: bigint; // default 49_000
+}) {
+  const { client, address, event } = args;
+  const maxRange = args.maxRange ?? 49_000n;
+
+  const out: any[] = [];
+  let start = args.fromBlock;
+
+  while (start <= args.toBlock) {
+    const end = start + maxRange;
+    const chunkTo = end > args.toBlock ? args.toBlock : end;
+
+    const chunk = await client.getLogs({
+      address,
+      event,
+      args: args.args,
+      fromBlock: start,
+      toBlock: chunkTo,
+    });
+
+    out.push(...chunk);
+    start = chunkTo + 1n;
+  }
+
+  return out;
+}
+
 export default function MarketMine() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const { rpcUrl, factory } = getAddresses(chainId);
+  if (!rpcUrl) {
+    return (
+      <PageWrapper title="Market" subtitle="My positions">
+        <MarketSubNav />
+        <p className="text-sm text-red-600 dark:text-red-400">
+          Missing RPC URL for this chain (check env vars).
+        </p>
+      </PageWrapper>
+    );
+  }
 
   const client = useMemo(() => createPublicClient({ transport: http(rpcUrl) }), [rpcUrl]);
 
@@ -73,18 +117,26 @@ export default function MarketMine() {
   const FROM_BLOCK = chainId === 11155111 ? 10329331n : 0n; // Factory deployed
 
 
+
   async function fetchAll() {
     setLoading(true);
     setReadErr(null);
+    if (!factory) throw new Error("Missing factory address for this chain.");
 
     try {
-      const logs = await client.getLogs({
+      const evtCreated = parseAbiItem(
+        "event OptionCreated(address indexed option,address indexed consumer,address indexed seller,bytes32 indexId,bytes32 areaId,uint32 yyyymmdd,int256 strike1e6,uint8 direction,uint256 premiumWei,uint256 payoutWei,uint64 buyDeadline)"
+      );
+
+      const latestBlock = await client.getBlockNumber();
+
+      const logs = await getLogsChunked({
+        client,
         address: factory,
-        event: parseAbiItem(
-          "event OptionCreated(address indexed option,address indexed consumer,address indexed seller,bytes32 indexId,bytes32 areaId,uint32 yyyymmdd,int256 strike1e6,uint8 direction,uint256 premiumWei,uint256 payoutWei,uint64 buyDeadline)"
-        ),
+        event: evtCreated,
         fromBlock: FROM_BLOCK,
-        toBlock: "latest",
+        toBlock: latestBlock,
+        maxRange: 49_000n,
       });
 
       const base: OptionRow[] = logs.map((l) => {
@@ -127,13 +179,19 @@ export default function MarketMine() {
             let settledIndexValue1e6: bigint | undefined;
 
             if (settled) {
-              const settledLogs = await client.getLogs({
+              const evtSettled = parseAbiItem(
+                "event Settled(address indexed winner,int256 indexValue1e6,bytes32 datasetHash,uint256 payoutWei)"
+              );
+
+              const latestBlock2 = await client.getBlockNumber();
+
+              const settledLogs = await getLogsChunked({
+                client,
                 address: r.option,
-                event: parseAbiItem(
-                  "event Settled(address indexed winner,int256 indexValue1e6,bytes32 datasetHash,uint256 payoutWei)"
-                ),
+                event: evtSettled,
                 fromBlock: r.blockNumber,
-                toBlock: "latest",
+                toBlock: latestBlock2,
+                maxRange: 49_000n,
               });
 
               const last = settledLogs[settledLogs.length - 1];
