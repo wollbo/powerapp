@@ -28,6 +28,41 @@ const INDEXES = [
 
 type IndexName = (typeof INDEXES)[number];
 
+async function getLogsChunked(args: {
+  client: ReturnType<typeof createPublicClient>;
+  address: `0x${string}`;
+  event: any; // parseAbiItem(...)
+  // args is optional; only indexed fields are used for filtering
+  args?: Record<string, any>;
+  fromBlock: bigint;
+  toBlock: bigint;
+  maxRange?: bigint; // default 49_000
+}) {
+  const { client, address, event } = args;
+  const maxRange = args.maxRange ?? 49_000n;
+
+  const out: any[] = [];
+  let start = args.fromBlock;
+
+  while (start <= args.toBlock) {
+    const end = start + maxRange;
+    const chunkTo = end > args.toBlock ? args.toBlock : end;
+
+    const chunk = await client.getLogs({
+      address,
+      event,
+      args: args.args,
+      fromBlock: start,
+      toBlock: chunkTo,
+    });
+
+    out.push(...chunk);
+    start = chunkTo + 1n;
+  }
+
+  return out;
+}
+
 
 export default function AdminConsumerExplorer() {
   const { address, isConnected } = useAccount();
@@ -69,13 +104,28 @@ export default function AdminConsumerExplorer() {
     setError(null);
 
     try {
-      const logs = await client.getLogs({
+      const evt = parseAbiItem(
+        "event DailyIndexCommitted(bytes32 indexed indexId, bytes32 indexed areaId, uint32 indexed yyyymmdd, int256 value1e6, bytes32 datasetHash, address reporter, uint64 reportedAt)"
+      );
+
+      // Guard: address must exist
+      if (!consumerAddress) {
+        setError("Missing consumer address for this chain (check Vercel env vars).");
+        setLoading(false);
+        return;
+      }
+
+      const latestBlock = await client.getBlockNumber();
+
+      const logs = await getLogsChunked({
+        client,
         address: consumerAddress,
-        event: parseAbiItem(
-          "event DailyIndexCommitted(bytes32 indexed indexId, bytes32 indexed areaId, uint32 indexed yyyymmdd, int256 value1e6, bytes32 datasetHash, address reporter, uint64 reportedAt)"
-        ),
+        event: evt,
+        // Filter by indexed fields:
+        args: { indexId, areaId },
         fromBlock: FROM_BLOCK,
-        toBlock: "latest",
+        toBlock: latestBlock,
+        maxRange: 49_000n,
       });
 
       const mapped: Row[] = logs.map((l) => {
@@ -91,10 +141,7 @@ export default function AdminConsumerExplorer() {
         };
       });
 
-      const filtered = mapped
-        .filter((r) => r.areaId.toLowerCase() === areaId.toLowerCase())
-        .filter((r) => r.indexId.toLowerCase() === indexId.toLowerCase())
-        .sort((a, b) => b.yyyymmdd - a.yyyymmdd);
+      const filtered = mapped.sort((a, b) => b.yyyymmdd - a.yyyymmdd);
 
       setRows(filtered.slice(0, 50));
     } catch (e: any) {
