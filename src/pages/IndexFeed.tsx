@@ -11,7 +11,7 @@ const AREAS = ["DK1","DK2","FI","NO1","NO2","NO3","NO4","NO5","SE1","SE2","SE3",
 
 export default function IndexFeed() {
   const [area, setArea] = useState("NO1");
-  const [range, setRange] = useState<30 | 90 | 365 | 9999>(30);
+  const [range, setRange] = useState<30 | 90 | 365 | 9999>(90);
 
   const chainId = useChainId();
   const isSepolia = chainId === SEPOLIA.id;
@@ -75,7 +75,7 @@ export default function IndexFeed() {
 
       {!isLoading && !error && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <IndexChart data={sliced} title={`${area} daily index (EUR/MW)`} />
+          <IndexChart data={sliced} title={`${area} daily VWAP index (EUR/MW)`} />
           <StrikeProbability data={sliced} />
         </div>
       )}

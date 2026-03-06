@@ -451,7 +451,7 @@ export default function MarketCreateOffer() {
           </p>
         )}
 
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
           <button
             onClick={submit}
             disabled={!isConnected || isPending || isConfirming}

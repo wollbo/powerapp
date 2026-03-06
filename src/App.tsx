@@ -9,6 +9,7 @@ import MarketCreateOffer from "./pages/MarketCreateOffer.tsx";
 import MarketMine from "./pages/MarketMine.tsx";
 import Methodology from "./pages/Methodology";
 import Home from "./pages/Home";
+import powerIndexLogo from "./assets/powerindex-logo.png";
 
 import { useTheme } from "./hooks/useTheme";
 import { useAccount, useChainId } from "wagmi";
@@ -40,7 +41,12 @@ function TopNav() {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <NavLink to="/" className="font-bold text-gray-900 dark:text-gray-100">
-            PowerIndex
+            <div className="flex items-center gap-2">
+              <img src={powerIndexLogo} className="h-6 w-6" />
+              <div className="font-bold text-gray-900 dark:text-gray-100">
+                PowerIndex
+              </div>
+            </div>
           </NavLink>
           <nav className="ml-4 flex items-center gap-2">
             <NavLink

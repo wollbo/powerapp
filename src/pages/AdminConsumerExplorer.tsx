@@ -63,6 +63,12 @@ async function getLogsChunked(args: {
   return out;
 }
 
+function explorerBaseUrl(chainId: number) {
+  if (chainId === 11155111) return "https://sepolia.etherscan.io";
+  if (chainId === 1) return "https://etherscan.io";
+  return null;
+}
+
 
 export default function AdminConsumerExplorer() {
   const { address, isConnected } = useAccount();
@@ -77,6 +83,8 @@ export default function AdminConsumerExplorer() {
   const indexId = useMemo(() => keccak256(toBytes(indexName)) as `0x${string}`, [indexName]);
 
   const { consumer: consumerAddress, forwarder: forwarderAddress } = getAddresses(chainId);
+  const base = explorerBaseUrl(chainId);
+  const consumerUrl = base && consumerAddress ? `${base}/address/${consumerAddress}` : null;
 
   const rpcUrl =
     chainId === 11155111
@@ -264,7 +272,19 @@ export default function AdminConsumerExplorer() {
 
         <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 font-mono">
           chainId: {chainId} <br />
-          consumer: {consumerAddress} <br />
+          consumer:{" "}
+            {consumerUrl ? (
+              <a
+                className="hover:underline"
+                href={consumerUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {consumerAddress}
+              </a>
+            ) : (
+              consumerAddress
+            )} <br />
           {chainId === 31337 && <>forwarder: {forwarderAddress}<br /></>}
         </div>
 

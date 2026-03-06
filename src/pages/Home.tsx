@@ -23,15 +23,34 @@ export default function Home() {
   const factoryUrl = base ? `${base}/address/${factory}` : null;
 
   return (
-    <PageWrapper title="PowerIndex" subtitle="A verifiable Day-ahead power index published on-chain.">
-      <section className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm p-8">
-        <div className="max-w-3xl">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+    <PageWrapper
+      title="PowerIndex"
+      subtitle="A verifiable Day-ahead power index published on-chain."
+    >
+      <section
+        className="
+          relative overflow-hidden
+          rounded-2xl border border-gray-200 dark:border-gray-800
+          shadow-sm p-10 md:p-12
+          bg-gradient-to-br from-blue-50 via-white to-indigo-50
+          dark:from-gray-900 dark:via-gray-900 dark:to-gray-950
+        "
+      >
+        <div
+          className="
+            pointer-events-none absolute -top-20 -right-20 h-72 w-72
+            rounded-full blur-3xl opacity-20
+            bg-blue-200 dark:bg-blue-900
+          "
+        />
+        <div className="relative max-w-3xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">
             Power market data, committed on-chain.
           </h2>
+
           <p className="mt-3 text-gray-600 dark:text-gray-300">
             PowerIndex is a verifiable index for Nordic power markets, implemented as a Chainlink Runtime Environment (CRE) workflow.
-            The workflow fetches Nord Pool Day-ahead prices and volumes, computes a deterministic VWAP,
+            The workflow fetches Nord Pool Day-ahead prices and volumes, computes a deterministic Volume-Weighted Average Price (VWAP),
             derives a <span className="font-mono">datasetHash</span>, and signs and publishes a
             commitment to an on-chain consumer contract.
             Binary options settle against the committed value.
@@ -91,7 +110,7 @@ export default function Home() {
         <div className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm p-6">
           <div className="text-sm font-semibold">Computation & verification</div>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            How VWAP is computed, how datasetHash is derived, and what gets published on-chain.
+            How the index is computed, how the datasetHash is derived, and what gets published on-chain.
           </p>
           <Link to="/methodology" className="mt-3 inline-block text-sm hover:underline">
             Read methodology →
@@ -122,7 +141,9 @@ export default function Home() {
             Create an offer →
           </Link>
         </div>
+
       </section>
+      
     </PageWrapper>
   );
 }

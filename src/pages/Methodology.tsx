@@ -9,7 +9,7 @@ export default function Methodology() {
       {/* 1) Data & scope */}
       <section className="rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          1) Data & scope
+          Data & scope
         </h2>
 
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -38,7 +38,7 @@ export default function Methodology() {
       {/* 2) VWAP calculation */}
       <section className="mt-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          2) VWAP calculation
+          Index calculation
         </h2>
 
         <div className="mt-3 rounded-xl border border-gray-200 dark:border-gray-800 p-4 text-sm font-mono">
@@ -55,7 +55,7 @@ export default function Methodology() {
       {/* 3) CRE publication & verification */}
         <section className="mt-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                3) CRE publication & on-chain verification
+                CRE publication & on-chain verification
             </h2>
 
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
