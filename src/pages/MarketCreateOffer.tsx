@@ -46,8 +46,6 @@ function stockholmNoonUnix(dateISO: string): number {
   // returns unix seconds for 12:00 in Europe/Stockholm on that calendar date
   const [y, m, d] = dateISO.split("-").map(Number);
 
-  // Start with UTC noon, then compute Stockholm offset for that moment, then correct.
-  // We’ll compute Stockholm-local components for a UTC timestamp and back out the offset.
 
   const tz = "Europe/Stockholm";
 
@@ -149,6 +147,10 @@ function defaultDeliveryDateISO(chainId: number | undefined) {
   return addDaysIsoUtc(stockholmTodayISO, afterNoon ? 2 : 1);
 }
 
+function previousDayIsoUtc(iso: string) {
+  return addDaysIsoUtc(iso, -1);
+}
+
 export default function MarketCreateOffer() {
   const { isConnected } = useAccount();
   const chainId = useChainId();
@@ -206,11 +208,12 @@ export default function MarketCreateOffer() {
   const [buyDeadlineStr, setBuyDeadlineStr] = useState<string>(() => quickDeadline(60));
 
   // when chain/date changes, update deadline in Sepolia mode
-  useEffect(() => {
-    if (chainId === sepolia.id && dateISO) {
-      setBuyDeadlineStr(String(stockholmNoonUnix(dateISO)));
+useEffect(() => {
+  if (chainId === sepolia.id && dateISO) {
+      const buyDeadlineDateISO = previousDayIsoUtc(dateISO);
+      setBuyDeadlineStr(String(stockholmNoonUnix(buyDeadlineDateISO)));
     }
-}, [chainId, dateISO]);
+  }, [chainId, dateISO]);
   const [err, setErr] = useState<string | null>(null);
 
   const { writeContract, data: txHash, isPending } = useWriteContract();
@@ -410,11 +413,12 @@ export default function MarketCreateOffer() {
             {chainId === 11155111 ? (
               <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 font-mono space-y-1">
                 <div>
-                  Sepolia: deadline fixed to 12:00 Europe/Stockholm for selected date.
+                  Sepolia: deadline fixed to 12:00 Europe/Stockholm the day before the selected date.
                 </div>
 
                 {dateISO && (() => {
-                  const { utcIso, stockholmFormatted } = formatStockholmNoon(dateISO);
+                  const buyDeadlineDateISO = previousDayIsoUtc(dateISO);
+                  const { utcIso, stockholmFormatted } = formatStockholmNoon(buyDeadlineDateISO);
                   return (
                     <>
                       <div>UTC: {utcIso}</div>
