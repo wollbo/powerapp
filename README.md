@@ -33,8 +33,11 @@ Nord Pool API
 
 ## Running Locally
 
-Requires: - powerindex repo (contracts + Makefile) - Anvil - Foundry -
-Node.js
+Requires: 
+- powerindex repo (contracts + Makefile)
+- Anvil
+- Foundry
+- Node.js
 
 Typical demo flow:
 
@@ -47,8 +50,7 @@ Typical demo flow:
 
 ## Networks
 
-Supports: - Local (Anvil) - Sepolia (when CRE + Nord Pool access
-available)
+Supports: - Local (Anvil) - Sepolia (requires Nord Pool market data API access)
 
 Environment variables select consumer, forwarder, and registry per
 chain.
